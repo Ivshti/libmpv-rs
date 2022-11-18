@@ -39,14 +39,14 @@ impl Mpv {
         T: RefUnwindSafe,
         U: RefUnwindSafe,
     {
-        if self
-            .protocols_guard
-            .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
-            .unwrap()
-        {
-            panic!("Protocol context already created")
-        } else {
-            ProtocolContext::new(self.ctx, PhantomData::<&Self>)
+        match self.protocols_guard.compare_exchange(
+            false,
+            true,
+            Ordering::AcqRel,
+            Ordering::Acquire,
+        ) {
+            Ok(_) => ProtocolContext::new(self.ctx, PhantomData::<&Self>),
+            Err(_) => panic!("A protocol context already exists"),
         }
     }
 }

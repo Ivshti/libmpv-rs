@@ -48,6 +48,27 @@ pub mod mpv_event_id {
     pub use libmpv_sys::mpv_event_id_MPV_EVENT_VIDEO_RECONFIG as VideoReconfig;
 }
 
+impl Mpv {
+    /// Create a context that can be used to wait for events and control which events are listened
+    /// for.
+    ///
+    /// # Panics
+    /// Panics if a context already exists
+    pub fn create_event_context(&self) -> EventContext {
+        match self
+            .events_guard
+            .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+        {
+            Ok(_) => EventContext {
+                ctx: self.ctx,
+                _does_not_outlive: PhantomData::<&Self>,
+            },
+            Err(_) => panic!("Event context already exists"),
+        }
+    }
+}
+
+>>>>>>> aface3d (Update headers and remove deprecated events)
 #[derive(Debug)]
 /// Data that is returned by both `GetPropertyReply` and `PropertyChange` events.
 pub enum PropertyData<'a> {
@@ -181,14 +202,7 @@ impl EventContext {
 
     /// Diable all deprecated events.
     pub fn disable_deprecated_events(&self) -> Result<()> {
-        self.disable_event(libmpv_sys::mpv_event_id_MPV_EVENT_TRACKS_CHANGED)?;
-        self.disable_event(libmpv_sys::mpv_event_id_MPV_EVENT_TRACK_SWITCHED)?;
         self.disable_event(libmpv_sys::mpv_event_id_MPV_EVENT_IDLE)?;
-        self.disable_event(libmpv_sys::mpv_event_id_MPV_EVENT_PAUSE)?;
-        self.disable_event(libmpv_sys::mpv_event_id_MPV_EVENT_UNPAUSE)?;
-        self.disable_event(libmpv_sys::mpv_event_id_MPV_EVENT_SCRIPT_INPUT_DISPATCH)?;
-        self.disable_event(libmpv_sys::mpv_event_id_MPV_EVENT_METADATA_UPDATE)?;
-        self.disable_event(libmpv_sys::mpv_event_id_MPV_EVENT_CHAPTER_CHANGE)?;
         Ok(())
     }
 
@@ -283,10 +297,8 @@ impl EventContext {
 
                 if let Err(e) = mpv_err((), end_file.error) {
                     Some(Err(e))
-                } else if end_file.reason >= 0 {
-                    Some(Ok(Event::EndFile(end_file.reason as _)))
                 } else {
-                    None
+                    Some(Ok(Event::EndFile(end_file.reason as _)))
                 }
             }
             mpv_event_id::FileLoaded => Some(Ok(Event::FileLoaded)),
