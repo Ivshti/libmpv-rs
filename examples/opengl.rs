@@ -35,7 +35,7 @@ fn get_proc_address(display: &Display, name: &str) -> *mut c_void {
     display.gl_window().context().get_proc_address(name) as *mut c_void
 }
 
-const VIDEO_URL: &str = "https://www.youtube.com/watch?v=DLzxrzFCyOs";
+const VIDEO_URL: &str = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 
 #[derive(Debug)]
 enum UserEvent {
