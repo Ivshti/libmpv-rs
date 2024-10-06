@@ -56,6 +56,13 @@ fn main() {
     let display = Display::new(wb, cb, &events_loop).unwrap();
 
     let mut mpv = Mpv::new().expect("Error while creating MPV");
+
+    mpv.set_property("vo", "libmpv").unwrap();
+
+    mpv.set_property("terminal", "yes").unwrap();
+    mpv.set_property("msg-level", "all=v").unwrap();
+    mpv.set_property("volume", 100).unwrap();
+
     let mut render_context = RenderContext::new(
         unsafe { mpv.ctx.as_mut() },
         vec![
